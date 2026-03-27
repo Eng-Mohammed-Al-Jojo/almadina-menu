@@ -1,0 +1,119 @@
+{
+  "categories": {
+    "-Oja_yKAP084NU6d0-X9": {
+      "available": true,
+      "createdAt": 1769237470950,
+      "name": "شاورما",
+      "order": 0
+    },
+    "-OjilJOGHHKh1F_ftIop": {
+      "available": true,
+      "createdAt": 1769237470950,
+      "name": "الغربي",
+      "order": 2
+    },
+    "-OjilKvb2XkGdpoSPryG": {
+      "available": true,
+      "createdAt": 1769237464655,
+      "name": "الإيطالي",
+      "order": 1
+    },
+    "-Ok8GjKlBVLMboKpbHnW": {
+      "available": false,
+      "createdAt": 1769682171277,
+      "name": "عرض اليوم",
+      "order": 3
+    }
+  },
+  "items": {
+    "-Ojaa-x8-MqmDEPxRvQV": {
+      "categoryId": "-Oja_yKAP084NU6d0-X9",
+      "createdAt": 1769100284342,
+      "featured": "",
+      "ingredients": "شاورما - بطاطا - صوص - طراشي",
+      "name": "صفيحة",
+      "price": "40",
+      "priceTw": "",
+      "star": false,
+      "visible": true
+    },
+    "-OjanCIIYVPKLvOjijMo": {
+      "categoryId": "-Oja_yKAP084NU6d0-X9",
+      "createdAt": 1769103742121,
+      "featured": "",
+      "ingredients": "",
+      "name": "سوري",
+      "price": "30",
+      "priceTw": "",
+      "star": false,
+      "visible": true
+    },
+    "-OjilOB6OpAd8qgg1onr": {
+      "categoryId": "-OjilJOGHHKh1F_ftIop",
+      "createdAt": 1769237484294,
+      "ingredients": "",
+      "name": "تشيكن بيتزا",
+      "price": "25",
+      "visible": true
+    },
+    "-OjilSJ63MmD8XAIzljP": {
+      "categoryId": "-OjilKvb2XkGdpoSPryG",
+      "createdAt": 1769237501190,
+      "featured": "bashka.jpg",
+      "ingredients": "",
+      "name": "كاليزوني",
+      "price": "30",
+      "star": true,
+      "visible": true
+    },
+    "-OjyTgeezxrzlG2qrwMe": {
+      "categoryId": "-Oja_yKAP084NU6d0-X9",
+      "createdAt": 1769501018830,
+      "image": "",
+      "ingredients": "",
+      "name": "صفيحة جبنة زيتون",
+      "price": "7",
+      "priceTw": "",
+      "star": false,
+      "visible": true
+    },
+    "-Ok8Y-XFuHu8S5uPG7dS": {
+      "categoryId": "-Oja_yKAP084NU6d0-X9",
+      "createdAt": 1769686698017,
+      "featured": "",
+      "ingredients": "",
+      "name": "مجنونة",
+      "price": "32",
+      "priceTw": "",
+      "star": false,
+      "visible": true
+    },
+    "-Ok8_g_M6MI2Fp3DVI-p": {
+      "categoryId": "-Ok8GjKlBVLMboKpbHnW",
+      "createdAt": 1769687402728,
+      "featured": "",
+      "ingredients": "",
+      "name": "سكالوبيني",
+      "price": "40",
+      "star": false,
+      "visible": true
+    },
+    "-Ok8rltKOkCq1DayOgzP": {
+      "categoryId": "-OjilJOGHHKh1F_ftIop",
+      "createdAt": 1769692142947,
+      "featured": "burger.jpeg",
+      "ingredients": "",
+      "name": "برجر بالجبنة",
+      "price": "25",
+      "star": true,
+      "visible": true
+    },
+    "newItem": {
+      "featured": "screencapture-127-0-0-1-5500-codn-html-2026-01-20-18_05_49.png"
+    }
+  },
+  "meta": {
+    "version": "1.0",
+    "exportedAt": 1769771430815
+  }
+}

@@ -1,0 +1,454 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #D4B996;
+  --color-primary-hover: #C5A070;
+  --color-secondary: #4A4A4A;
+  --color-accent: #2D2D2D;
+
+  --shadow-premium: 0 10px 40px -10px rgba(0, 0, 0, 0.1);
+  --shadow-premium-hover: 0 20px 60px -15px rgba(0, 0, 0, 0.2);
+}
+
+:root {
+  --bg-main: #f9eee4;
+  --bg-card: #f5f5f5;
+  --text-main: #2D2D2D;
+  --text-muted: #717171;
+  --border-color: #EAE3D9;
+}
+
+.dark {
+  --bg-main: #141414;
+  --bg-card: #1C1C1C;
+  --text-main: #F5F5F5;
+  --text-muted: #A0A0A0;
+  --border-color: #2D2D2D;
+}
+
+body {
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: 'Cairo', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+@import "swiper/css";
+@import "swiper/css/navigation";
+@import "swiper/css/pagination";
+
+/* النقاط العادية */
+.swiper-pagination-bullet {
+  background-color: black;
+  /* اللون الجديد، توتي */
+  opacity: 0.7;
+}
+
+/* النقطة النشطة */
+.swiper-pagination-bullet-active {
+  background-color: #a70a05;
+  /* اللون الذهبي للنشطة */
+  opacity: 1;
+}
+
+.swiper-button-next,
+.swiper-button-prev {
+  color: #a70a05;
+  /* اللون الذهبي */
+  background: rgba(0, 0, 0, 0.2);
+  /* خلفية خفيفة */
+  border-radius: 50%;
+  /* دائري */
+  padding: 8px;
+  width: 40px;
+  height: 40px;
+}
+
+@font-face {
+  font-family: 'Playpen Sans Arabic';
+  src: url('/fonts/PlaypenSansArabic.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+
+@font-face {
+  font-family: 'Lemonada';
+  src: url('/fonts/Lemonada.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'BalooBhaijaan2-Bold';
+  src: url('/fonts/BalooBhaijaan2-Bold.ttf') format('truetype');
+  font-weight: 70;
+  font-style: extra-bold;
+}
+
+
+
+/* Cairo Thin */
+@font-face {
+  font-family: 'Cairo';
+  src: url('/fonts/Cairo-Thin.ttf') format('truetype');
+  font-weight: 200;
+  font-style: normal;
+}
+
+/* Cairo ExtraLight */
+@font-face {
+  font-family: 'Cairo';
+  src: url('/fonts/Cairo-ExtraLight.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+}
+
+/* Cairo Light */
+@font-face {
+  font-family: 'Cairo';
+  src: url('/fonts/Cairo-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+}
+
+/* Cairo Regular */
+@font-face {
+  font-family: 'Cairo';
+  src: url('/fonts/Cairo-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+/* Cairo Medium */
+@font-face {
+  font-family: 'Cairo';
+  src: url('/fonts/Cairo-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+}
+
+/* Cairo SemiBold */
+@font-face {
+  font-family: 'Cairo';
+  src: url('/fonts/Cairo-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+}
+
+/* Cairo Bold */
+@font-face {
+  font-family: 'Cairo';
+  src: url('/fonts/Cairo-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+/* Cairo ExtraBold */
+@font-face {
+  font-family: 'Cairo';
+  src: url('/fonts/Cairo-ExtraBold.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+}
+
+/* Amiri Light */
+@font-face {
+  font-family: 'Almarai';
+  src: url('/fonts/Almarai-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+}
+
+/* Amiri Regular */
+@font-face {
+  font-family: 'Almarai';
+  src: url('/fonts/Almarai-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+/* Amiri Bold */
+@font-face {
+  font-family: 'Almarai';
+  src: url('/fonts/Almarai-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+/* Amiri Extra Bold */
+@font-face {
+  font-family: 'Almarai';
+  src: url('/fonts/Almarai-ExtraBold.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+}
+
+
+body {
+  font-family: 'Playpen Sans Arabic', sans-serif;
+}
+
+
+@keyframes pulseScale {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+.animate-pulseScale {
+  animation: pulseScale 2s ease-in-out infinite;
+}
+
+@keyframes textGradient {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-textGradient {
+  background-size: 200% 200%;
+  animation: textGradient 3s ease infinite;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 1.5s ease forwards;
+}
+
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.25s ease-out;
+}
+
+@keyframes floatSlow {
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.animate-floatSlow {
+  animation: floatSlow 4s ease-in-out infinite;
+}
+
+/* أنيميشن Toast */
+@keyframes toast-show {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -150%) scale(0.9);
+  }
+
+  10% {
+    opacity: 1;
+    transform: translate(-50%, -100%) scale(1.05);
+  }
+
+  80% {
+    opacity: 1;
+    transform: translate(-50%, -100%) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -150%) scale(0.95);
+  }
+}
+
+/* class لإستدعاء الانيميشن */
+.animate-toast-show {
+  animation: toast-show 1s ease-in-out forwards;
+}
+
+
+/* مخصص للitemRow animations*/
+
+@keyframes itemEnter {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes imagePop {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes toastShow {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -40px) scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, -70px) scale(1);
+  }
+}
+
+.animate-item-enter {
+  animation: itemEnter 0.45s ease-out both;
+}
+
+.animate-image-pop {
+  animation: imagePop 0.4s ease-out both;
+}
+
+.animate-toast-show {
+  animation: toastShow 0.3s ease-out both;
+}
+
+
+
+@keyframes loaderFade {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes logoFloat {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes haloPulse {
+
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.7;
+    transform: scale(1.15);
+  }
+}
+
+@keyframes bgPulse {
+
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@keyframes dot {
+  0% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+
+  100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+}
+
+.animate-loader-fade {
+  animation: loaderFade 0.4s ease-out both;
+}
+
+.animate-logo-float {
+  animation: logoFloat 2.8s ease-in-out infinite;
+}
+
+.animate-halo {
+  animation: haloPulse 3s ease-in-out infinite;
+}
+
+.animate-bg-pulse {
+  animation: bgPulse 4s ease-in-out infinite;
+}
+
+.animate-dot-1 {
+  animation: dot 1.4s infinite;
+}
+
+.animate-dot-2 {
+  animation: dot 1.4s infinite 0.2s;
+}
+
+.animate-dot-3 {
+  animation: dot 1.4s infinite 0.4s;
+}
