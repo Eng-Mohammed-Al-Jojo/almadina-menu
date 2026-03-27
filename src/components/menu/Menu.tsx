@@ -217,24 +217,38 @@ export default function Menu({ onLoadingChange, onFeaturedCheck, orderSystem: in
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-32">
+    <div className="max-w-7xl mx-auto px-1 sm:px-6 lg:px-8 pb-32">
       {/* Header / Search Section */}
       <div className="flex flex-col items-center mb-10 gap-6">
         <div className="w-full max-w-2xl relative group">
-          <FiSearch className="right-5 absolute top-1/2 -translate-y-1/2 text-(--text-muted) group-focus-within:text-primary transition-colors text-xl" />
+
+          {/* Search Icon */}
+          <FiSearch className="right-5 absolute top-1/2 -translate-y-1/2 
+    text-(--text-muted) group-focus-within:text-primary 
+    transition-colors text-lg" />
+
           <input
             type="text"
             placeholder={t('common.search')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-(--bg-card)/80 backdrop-blur-2xl border border-(--border-color) rounded-4xl py-5 pr-14 pl-6 text-base font-bold focus:ring-8 focus:ring-primary/5 focus:border-primary outline-none transition-all shadow-xl text-right"
+            className="w-full bg-(--bg-card)/70 backdrop-blur-xl 
+      border border-(--border-color) rounded-3xl 
+      py-3 pr-12 pl-5 text-sm font-semibold 
+      focus:ring-4 focus:ring-primary/10 focus:border-primary 
+      outline-none transition-all shadow-md text-right"
           />
+
           {searchTerm && (
             <button
               onClick={() => setSearchTerm("")}
-              className="absolute left-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-xl bg-(--bg-main) flex items-center justify-center text-(--text-muted) hover:text-red-500 transition-all border border-(--border-color)"
+              className="absolute left-3 top-1/2 -translate-y-1/2 
+        w-7 h-7 rounded-lg bg-(--bg-main) 
+        flex items-center justify-center 
+        text-(--text-muted) hover:text-red-500 
+        transition-all border border-(--border-color)"
             >
-              <FiX size={16} />
+              <FiX size={14} />
             </button>
           )}
         </div>

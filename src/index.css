@@ -8,6 +8,7 @@
 
   --shadow-premium: 0 10px 40px -10px rgba(0, 0, 0, 0.1);
   --shadow-premium-hover: 0 20px 60px -15px rgba(0, 0, 0, 0.2);
+  --shadow-soft: 0 8px 25px -10px rgba(0, 0, 0, 0.12);
 }
 
 :root {
@@ -16,6 +17,7 @@
   --text-main: #F5F5F5;
   --text-muted: #A0A0A0;
   --border-color: #2D2D2D;
+
 }
 
 .dark {

@@ -44,7 +44,7 @@ export default function ItemRow({ item, orderSystem, featuredMode }: Props) {
       {/* Top Row: Name & Price */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-2 min-w-0">
-          <h3 className={`text-base sm:text-lg font-black leading-tight truncate ${unavailable ? "text-(--text-muted)" : "text-(--text-main)"}`}>
+          <h3 className={`text-sm md:text-md font-black leading-tight truncate ${unavailable ? "text-(--text-muted)" : "text-(--text-main)"}`}>
             {itemName}
           </h3>
           {item.star && <FiStar className="text-amber-400 fill-amber-400 shrink-0" size={14} />}

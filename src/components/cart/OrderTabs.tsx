@@ -78,7 +78,7 @@ export default function OrderTabs({
 
     const validateForm = () => {
         console.log("🔍 [OrderTabs] Validating form...", { tab, form });
-        
+
         if (!isCurrentTabActive()) {
             console.warn("⚠️ [OrderTabs] Service unavailable for tab:", tab);
             setError(t('common.service_unavailable'));

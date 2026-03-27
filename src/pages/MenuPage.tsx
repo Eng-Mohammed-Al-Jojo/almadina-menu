@@ -63,9 +63,9 @@ export default function MenuPage() {
 
         {/* Hero Banner Area */}
         <div className="relative w-full h-[40vh] md:h-[50vh] flex flex-col items-center justify-center text-center overflow-visible">
-          
+
           {/* Main Banner Image with Seamless Fade Mask */}
-          <div 
+          <div
             className="absolute inset-x-0 top-0 h-full pointer-events-none"
             style={{
               maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%)',
@@ -86,7 +86,7 @@ export default function MenuPage() {
 
           {/* Hero Content */}
           <div className="relative z-20 space-y-6 px-4 max-w-4xl mx-auto -mt-10 md:-mt-16">
-            <motion.div 
+            <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.5, duration: 0.8 }}

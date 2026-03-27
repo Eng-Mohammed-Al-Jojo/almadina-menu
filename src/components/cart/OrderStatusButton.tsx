@@ -118,7 +118,7 @@ export default function OrderStatusButton() {
                 <div className="bg-(--bg-card)/80 backdrop-blur-2xl border border-(--border-color) rounded-[2.5rem] p-4 shadow-2xl overflow-hidden relative group">
                     {/* Progress Bar Background */}
                     <div className="absolute top-0 left-0 w-full h-1 bg-(--border-color) opacity-20" />
-                    <motion.div 
+                    <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${statusInfo.progress}%` }}
                         className={`absolute top-0 left-0 h-1 ${statusInfo.color} transition-all duration-1000`}
@@ -128,7 +128,7 @@ export default function OrderStatusButton() {
                         <div className={`w-12 h-12 rounded-2xl ${statusInfo.color} text-white flex items-center justify-center text-xl shadow-lg shadow-${statusInfo.color.split('-')[1]}-500/20`}>
                             {statusInfo.icon}
                         </div>
-                        
+
                         <div className="flex-1 min-w-0">
                             <p className="text-[10px] font-black uppercase tracking-widest text-(--text-muted) mb-0.5">
                                 {t('common.order_type')}: {order.orderType === 'in' ? t('common.dine_in') : t('common.takeaway')}
@@ -138,7 +138,7 @@ export default function OrderStatusButton() {
                             </h4>
                         </div>
 
-                        <button 
+                        <button
                             onClick={dismiss}
                             className="w-8 h-8 rounded-xl bg-(--bg-main) border border-(--border-color) flex items-center justify-center text-(--text-muted) hover:text-red-500 transition-colors"
                         >
@@ -149,11 +149,10 @@ export default function OrderStatusButton() {
                     {/* Step Indicators */}
                     <div className="mt-4 flex justify-between px-2">
                         {[1, 2, 3, 4].map((step) => (
-                            <div 
-                                key={step} 
-                                className={`h-1.5 flex-1 mx-0.5 rounded-full transition-all duration-500 ${
-                                    statusInfo.progress >= step * 25 ? statusInfo.color : 'bg-(--border-color)'
-                                }`} 
+                            <div
+                                key={step}
+                                className={`h-1.5 flex-1 mx-0.5 rounded-full transition-all duration-500 ${statusInfo.progress >= step * 25 ? statusInfo.color : 'bg-(--border-color)'
+                                    }`}
                             />
                         ))}
                     </div>

@@ -49,13 +49,13 @@ export default function CartModal({ isOpen, onClose }: { isOpen: boolean; onClos
 
     const handleConfirm = async (type: "in" | "out", customerData: any, message: string) => {
         if (submitting) return;
-        
+
         console.log("🚀 [CartModal] Order submission started...", { type, customerData });
         setSubmitting(true);
 
         try {
             const orderIdStr = `ORD-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
-            
+
             const orderData = {
                 orderId: orderIdStr,
                 customer: customerData,
@@ -89,7 +89,7 @@ export default function CartModal({ isOpen, onClose }: { isOpen: boolean; onClos
             if (shouldSendWa) {
                 const phone = type === "in" ? orderSettings?.inPhone : orderSettings?.outPhone;
                 console.log("📱 [CartModal] WhatsApp phone identified:", phone);
-                
+
                 if (phone) {
                     const cleanPhone = phone.replace(/[\s\+]/g, '');
                     const encoded = encodeURIComponent(message);
@@ -106,7 +106,7 @@ export default function CartModal({ isOpen, onClose }: { isOpen: boolean; onClos
             // Finalizing
             if (saved || sent) {
                 toast.success(t('common.order_success_alert') || "Order placed successfully!");
-                
+
                 setTimeout(() => {
                     clearCart();
                     setStep("items");
@@ -238,12 +238,12 @@ export default function CartModal({ isOpen, onClose }: { isOpen: boolean; onClos
                                 className="absolute inset-0 z-50 bg-(--bg-card) flex flex-col"
                             >
                                 <div className="flex-1 overflow-y-auto custom-scrollbar">
-                                    <OrderTracking 
-                                        orderId={orderId} 
+                                    <OrderTracking
+                                        orderId={orderId}
                                         onClose={() => {
                                             updateOrderId(null);
                                             setStep("items");
-                                        }} 
+                                        }}
                                     />
                                 </div>
                             </motion.div>
