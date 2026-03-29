@@ -518,7 +518,6 @@ export default function Admin() {
               toggleCategoryVisibility={toggleCategoryVisibility}
               toggleSubcategoryVisibility={toggleSubcategoryVisibility}
               updateCategoryImage={updateCategoryImage}
-              updateSubcategoryImage={updateSubcategoryImage}
               showNotification={showNotification}
               newCategoryNameAr={newCategoryNameAr}
               setNewCategoryNameAr={setNewCategoryNameAr}
