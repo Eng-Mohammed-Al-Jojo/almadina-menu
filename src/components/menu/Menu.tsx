@@ -49,6 +49,7 @@ export interface Item {
   visible?: boolean;
   star?: boolean;
   createdAt?: number;
+  order?: number;
 }
 
 /* ================= LocalStorage ================= */
@@ -178,6 +179,7 @@ export default function Menu({ onLoadingChange, onFeaturedCheck, orderSystem: in
       onValue(ref(db, "items"), (snap) => {
         const data = snap.val();
         its = data ? Object.entries(data).map(([id, v]: any) => ({ id, ...v, createdAt: v.createdAt || 0 })) : [];
+        its.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
         setItems(its);
         itemsLoaded = true;
         if (catsLoaded && orderSystemLoaded && subsLoaded) finishFirebase(cats, subs, its, orderSystem);

@@ -72,13 +72,13 @@ export default function CategorySection({ category, subcategories, items, orderS
                 whileHover={{ scale: 1.05 }}
                 transition={{ duration: 0.8 }}
                 src={`/images/${categoryImage}`}
-                className="w-full h-full object-cover opacity-65 group-hover:scale-105 transition-transform duration-700"
+                className="w-full h-full object-cover opacity-95 group-hover:scale-105 transition-transform duration-700"
                 alt={catName}
                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
               />
 
               {/* Soft overlay */}
-              <div className="absolute inset-0 bg-linear-to-t from-(--bg-card)/90 via-(--bg-card)/30 to-transparent" />
+              <div className="absolute inset-0 bg-linear-to-t from-(--bg-card)/65 via-(--bg-card)/10 to-transparent" />
             </>
           ) : (
             <div className="w-full h-full bg-linear-to-br from-primary/1 to-secondary/1" />

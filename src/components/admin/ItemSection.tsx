@@ -1,9 +1,25 @@
 import React, { useState, useEffect } from "react";
 import { ref, push, update } from "firebase/database";
 import { db } from "../../firebase";
-import { FiEdit, FiTrash2, FiPlus, FiSearch, FiChevronDown, FiStar, FiImage, FiMinus } from "react-icons/fi";
+import { FiEdit, FiTrash2, FiPlus, FiSearch, FiChevronDown, FiStar, FiImage, FiMinus, FiArrowUp, FiArrowDown, FiMove } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import {
+  DndContext,
+  closestCenter,
+  MouseSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import type { PopupState, Category, Item, Subcategory } from "./types";
 import FeaturedGallery from "./FeaturedGallery";
 import CustomSelect from "./CustomSelect";
@@ -20,6 +36,184 @@ interface Props {
   popup: PopupState;
   setPopup: (popup: PopupState) => void;
 }
+
+const SortableItem: React.FC<{
+  item: Item & { id: string };
+  idx: number;
+  totalItems: number;
+  subcategories: Record<string, Subcategory>;
+  toggleItem: (id: string, visible: boolean) => void;
+  openGallery: (itemId: string, currentImage?: string) => void;
+  removeImage: (id: string) => void;
+  setPopup: (popup: PopupState) => void;
+  moveItem: (categoryId: string, itemId: string, direction: 'up' | 'down') => void;
+}> = ({ item, idx, totalItems, subcategories, toggleItem, openGallery, removeImage, setPopup, moveItem }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: item.id });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    touchAction: "none",
+  };
+
+  return (
+    <motion.div
+      ref={setNodeRef}
+      style={style}
+      layout
+      className={`flex flex-col sm:flex-row gap-3 sm:gap-6 py-3 sm:py-4 transition-all bg-(--bg-card) mb-1 px-2 rounded-2xl ${isDragging ? "z-50 shadow-xl border-primary border scale-[1.02]" : ""} ${!item.visible ? "opacity-40 grayscale" : ""
+        }`}
+    >
+      {/* ===== Top Row (image + info) ===== */}
+      <div className="flex gap-3 w-full items-center">
+        {/* Drag Handle */}
+        <div
+          {...listeners}
+          {...attributes}
+          className="cursor-grab active:cursor-grabbing p-2 text-(--text-muted) hover:text-primary transition-colors"
+        >
+          <FiMove size={18} />
+        </div>
+
+        {/* Image */}
+        <div className="relative group/img shrink-0">
+          {item.image ? (
+            <div className="relative w-14 h-14 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl overflow-hidden border border-(--border-color) shadow-inner">
+              <img
+                src={`/images/${item.image}`}
+                alt={item.nameAr}
+                className="w-full h-full object-cover group-hover/img:scale-110 transition-transform duration-500"
+                onError={(e) => { e.currentTarget.src = "/logo.png" }}
+              />
+
+              <button
+                onClick={() => removeImage(item.id)}
+                className="absolute -top-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg scale-0 group-hover/img:scale-100 transition-transform"
+              >
+                <FiMinus size={12} />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => openGallery(item.id)}
+              className="w-14 h-14 sm:w-20 sm:h-20 bg-(--bg-main) border-2 border-dashed border-(--border-color) rounded-xl sm:rounded-2xl flex items-center justify-center text-(--text-muted) hover:text-primary hover:border-primary/50 transition-all"
+            >
+              <FiImage size={18} />
+            </button>
+          )}
+        </div>
+
+        {/* Info */}
+        <div className="flex-1 min-w-0 flex flex-col">
+
+          <div className="flex items-center gap-2">
+            <h4 className="font-black text-sm sm:text-lg text-(--text-main) truncate">
+              {item.nameAr}
+            </h4>
+
+            {item.star && (
+              <FiStar
+                className="text-yellow-400 fill-yellow-400 shrink-0"
+                size={14}
+              />
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 mt-0.5">
+            {item.subcategoryId && (
+              <span className="text-[9px] px-2 py-0.5 bg-(--bg-main) border border-(--border-color) rounded-lg font-black text-(--text-muted) uppercase">
+                {subcategories[item.subcategoryId]?.nameAr}
+              </span>
+            )}
+            {item.ingredientsAr && (
+              <p className="text-[11px] sm:text-xs text-(--text-muted) font-medium line-clamp-1">
+                {item.ingredientsAr}
+              </p>
+            )}
+          </div>
+
+          <p className="text-primary font-black text-xs sm:text-sm mt-0.5">
+            {item.price} <span className="text-[9px] opacity-70">₪</span>
+          </p>
+
+        </div>
+      </div>
+
+      {/* ===== Actions ===== */}
+      <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 w-full sm:w-auto bg-(--bg-main) p-1.5 rounded-xl sm:rounded-2xl border border-(--border-color)">
+
+        {/* Animated Toggle */}
+        <button
+          onClick={() => toggleItem(item.id, item.visible)}
+          className={`relative shrink-0 w-12 h-6 rounded-full flex items-center p-1 transition-all duration-300 border ${item.visible
+            ? "bg-green-500 border-green-500 shadow-[0_0_12px_rgba(34,197,94,0.3)]"
+            : "bg-(--bg-main) border-(--border-color)"
+            }`}
+          style={{
+            justifyContent: item.visible ? "flex-end" : "flex-start"
+          }}
+        >
+          <motion.div
+            layout
+            initial={false}
+            transition={{ type: "spring", stiffness: 600, damping: 30 }}
+            className={`w-4 h-4 rounded-full shadow-sm z-10 ${item.visible ? "bg-white" : "bg-(--text-muted)"
+              }`}
+          />
+        </button>
+
+        <div className="flex items-center gap-1">
+
+          <button
+            onClick={async () => {
+              const newStar = !item.star;
+              await update(ref(db, `items/${item.id}`), { star: newStar });
+            }}
+            className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all ${item.star
+              ? "bg-yellow-100 text-yellow-600"
+              : "hover:bg-yellow-50 text-(--text-muted)"
+              }`}
+          >
+            <FiStar size={16} fill={item.star ? "currentColor" : "none"} />
+          </button>
+
+          <button
+            onClick={() => setPopup({ type: "editItem", id: item.id })}
+            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-primary/10 hover:text-primary text-(--text-muted)"
+          >
+            <FiEdit size={16} />
+          </button>
+
+          <button
+            onClick={() => setPopup({ type: "deleteItem", id: item.id })}
+            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-50 hover:text-red-500 text-(--text-muted)"
+          >
+            <FiTrash2 size={16} />
+          </button>
+
+        </div>
+        <div className="w-px h-6 bg-(--border-color) mx-1 hidden sm:block" />
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => moveItem(item.categoryId, item.id, 'up')}
+            disabled={idx === 0}
+            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-primary/10 hover:text-primary text-(--text-muted) disabled:opacity-30 disabled:pointer-events-none"
+          >
+            <FiArrowUp size={16} />
+          </button>
+          <button
+            onClick={() => moveItem(item.categoryId, item.id, 'down')}
+            disabled={idx === totalItems - 1}
+            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-primary/10 hover:text-primary text-(--text-muted) disabled:opacity-30 disabled:pointer-events-none"
+          >
+            <FiArrowDown size={16} />
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
 
 const ItemSection: React.FC<Props> = ({ categories, subcategories, items, setPopup }) => {
   const { t, i18n } = useTranslation();
@@ -107,6 +301,63 @@ const ItemSection: React.FC<Props> = ({ categories, subcategories, items, setPop
 
   const toggleSection = (id: string) => {
     setExpandedSections(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const moveItem = async (categoryId: string, itemId: string, direction: 'up' | 'down') => {
+    const catItems = Object.entries(localItems)
+      .map(([id, item]) => ({ ...item, id }))
+      .filter(item => item.categoryId === categoryId)
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+    const index = catItems.findIndex(i => i.id === itemId);
+    if (index === -1) return;
+
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= catItems.length) return;
+
+    const newItems = [...catItems];
+    const [movedItem] = newItems.splice(index, 1);
+    newItems.splice(newIndex, 0, movedItem);
+
+    // Update orders in Firebase
+    const updates: Record<string, any> = {};
+    newItems.forEach((item, idx) => {
+      updates[`items/${item.id}/order`] = idx;
+    });
+
+    try {
+      await update(ref(db), updates);
+    } catch (err) {
+      console.error("Failed to reorder items:", err);
+    }
+  };
+
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 150, tolerance: 5 },
+    })
+  );
+
+  const handleDragEndItems = async (event: DragEndEvent, currentItems: (Item & { id: string })[]) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = currentItems.findIndex((i) => i.id === active.id);
+    const newIndex = currentItems.findIndex((i) => i.id === over.id);
+
+    const newArray = arrayMove(currentItems, oldIndex, newIndex);
+
+    const updates: Record<string, any> = {};
+    newArray.forEach((item, index) => {
+      updates[`items/${item.id}/order`] = index;
+    });
+
+    try {
+      await update(ref(db), updates);
+    } catch (err) {
+      console.error("Failed to drag reorder items:", err);
+    }
   };
 
   const currentCatSubcategories = Object.entries(subcategories)
@@ -252,7 +503,8 @@ const ItemSection: React.FC<Props> = ({ categories, subcategories, items, setPop
                   (itemIngredients && itemIngredients.toLowerCase().includes(search)) ||
                   String(item.price).includes(search)
                 );
-              });
+              })
+              .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
             if (quickSearch && catItems.length === 0) return null;
 
@@ -285,138 +537,33 @@ const ItemSection: React.FC<Props> = ({ categories, subcategories, items, setPop
                       className="overflow-hidden"
                     >
                       <div className="p-6 pt-2 divide-y divide-(--border-color)">
-                        {catItems.map((item, idx) => (
-                          <motion.div
-                            key={item.id}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: idx * 0.05 }}
-                            className={`flex flex-col sm:flex-row gap-3 sm:gap-6 py-3 sm:py-4 transition-all ${!item.visible ? "opacity-40 grayscale" : ""
-                              }`}
+                        <DndContext
+                          sensors={sensors}
+                          collisionDetection={closestCenter}
+                          onDragEnd={(event) => handleDragEndItems(event, catItems)}
+                        >
+                          <SortableContext
+                            items={catItems.map((i) => i.id)}
+                            strategy={verticalListSortingStrategy}
                           >
-                            {/* ===== Top Row (image + info) ===== */}
-                            <div className="flex gap-3 w-full items-center">
-
-                              {/* Image */}
-                              <div className="relative group/img shrink-0">
-                                {item.image ? (
-                                  <div className="relative w-14 h-14 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl overflow-hidden border border-(--border-color) shadow-inner">
-                                    <img
-                                      src={`/images/${item.image}`}
-                                      alt={item.nameAr}
-                                      className="w-full h-full object-cover group-hover/img:scale-110 transition-transform duration-500"
-                                      onError={(e) => { e.currentTarget.src = "/logo.png" }}
-                                    />
-
-                                    <button
-                                      onClick={() => removeImage(item.id)}
-                                      className="absolute -top-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg scale-0 group-hover/img:scale-100 transition-transform"
-                                    >
-                                      <FiMinus size={12} />
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <button
-                                    onClick={() => openGallery(item.id)}
-                                    className="w-14 h-14 sm:w-20 sm:h-20 bg-(--bg-main) border-2 border-dashed border-(--border-color) rounded-xl sm:rounded-2xl flex items-center justify-center text-(--text-muted) hover:text-primary hover:border-primary/50 transition-all"
-                                  >
-                                    <FiImage size={18} />
-                                  </button>
-                                )}
-                              </div>
-
-                              {/* Info */}
-                              <div className="flex-1 min-w-0 flex flex-col">
-
-                                <div className="flex items-center gap-2">
-                                  <h4 className="font-black text-sm sm:text-lg text-(--text-main) truncate">
-                                    {item.nameAr}
-                                  </h4>
-
-                                  {item.star && (
-                                    <FiStar
-                                      className="text-yellow-400 fill-yellow-400 shrink-0"
-                                      size={14}
-                                    />
-                                  )}
-                                </div>
-
-                                <div className="flex items-center gap-2 mt-0.5">
-                                  {item.subcategoryId && (
-                                    <span className="text-[9px] px-2 py-0.5 bg-(--bg-main) border border-(--border-color) rounded-lg font-black text-(--text-muted) uppercase">
-                                      {subcategories[item.subcategoryId]?.nameAr}
-                                    </span>
-                                  )}
-                                  {item.ingredientsAr && (
-                                    <p className="text-[11px] sm:text-xs text-(--text-muted) font-medium line-clamp-1">
-                                      {item.ingredientsAr}
-                                    </p>
-                                  )}
-                                </div>
-
-                                <p className="text-primary font-black text-xs sm:text-sm mt-0.5">
-                                  {item.price} <span className="text-[9px] opacity-70">₪</span>
-                                </p>
-
-                              </div>
-                            </div>
-
-                            {/* ===== Actions ===== */}
-                            <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 w-full sm:w-auto bg-(--bg-main) p-1.5 rounded-xl sm:rounded-2xl border border-(--border-color)">
-
-                              {/* Animated Toggle */}
-                              <button
-                                onClick={() => toggleItem(item.id, item.visible)}
-                                className={`relative shrink-0 w-12 h-6 rounded-full flex items-center p-1 transition-all duration-300 border ${item.visible
-                                  ? "bg-green-500 border-green-500 shadow-[0_0_12px_rgba(34,197,94,0.3)]"
-                                  : "bg-(--bg-main) border-(--border-color)"
-                                  }`}
-                                style={{
-                                  justifyContent: item.visible ? "flex-end" : "flex-start"
-                                }}
-                              >
-                                <motion.div
-                                  layout
-                                  initial={false}
-                                  transition={{ type: "spring", stiffness: 600, damping: 30 }}
-                                  className={`w-4 h-4 rounded-full shadow-sm z-10 ${item.visible ? "bg-white" : "bg-(--text-muted)"
-                                    }`}
+                            <div className="flex flex-col">
+                              {catItems.map((item, idx) => (
+                                <SortableItem
+                                  key={item.id}
+                                  item={item}
+                                  idx={idx}
+                                  totalItems={catItems.length}
+                                  subcategories={subcategories}
+                                  toggleItem={toggleItem}
+                                  openGallery={openGallery}
+                                  removeImage={removeImage}
+                                  setPopup={setPopup}
+                                  moveItem={moveItem}
                                 />
-                              </button>
-
-                              <div className="flex items-center gap-1">
-
-                                <button
-                                  onClick={async () => {
-                                    const newStar = !item.star;
-                                    await update(ref(db, `items/${item.id}`), { star: newStar });
-                                  }}
-                                  className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all ${item.star
-                                    ? "bg-yellow-100 text-yellow-600"
-                                    : "hover:bg-yellow-50 text-(--text-muted)"
-                                    }`}
-                                >
-                                  <FiStar size={16} fill={item.star ? "currentColor" : "none"} />
-                                </button>
-
-                                <button
-                                  onClick={() => setPopup({ type: "editItem", id: item.id })}
-                                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-primary/10 hover:text-primary text-(--text-muted)"
-                                >
-                                  <FiEdit size={16} />
-                                </button>
-
-                                <button
-                                  onClick={() => setPopup({ type: "deleteItem", id: item.id })}
-                                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-50 hover:text-red-500 text-(--text-muted)"
-                                >
-                                  <FiTrash2 size={16} />
-                                </button>
-
-                              </div>
+                              ))}
                             </div>
-                          </motion.div>
-                        ))}
+                          </SortableContext>
+                        </DndContext>
 
                         {catItems.length === 0 && (
                           <div className="py-12 text-center">

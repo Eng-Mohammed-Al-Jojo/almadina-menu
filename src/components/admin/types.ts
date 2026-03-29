@@ -51,4 +51,5 @@ export interface Item {
   visible: boolean;
   createdAt: number;
   star?: boolean;
+  order?: number;
 }

@@ -280,7 +280,16 @@
         "table": "طاولة",
         "table_number": "رقم الطاولة",
         "phone": "رقم الجوال",
-        "item_details_desc": "تفاصيل إضافية"
+        "item_details_desc": "تفاصيل إضافية",
+        "add_image": "أضف صورة",
+        "add_image_desc": "اختر صورة للمنتج",
+        "no_items_placeholder": "لا يوجد أصناف في هذا القسم حالياً",
+        "item_deleted_success_title": "تم الحذف بنجاح",
+        "item_deleted_success_desc": "تم حذف الصنف بنجاح",
+        "manage_sub": "إدارة الأصناف الفرعية",
+        "manage_sub_desc": "إدارة الأصناف الفرعية",
+        "add_new": "أضف قسم فرعي جديد",
+        "add_new_desc": "أضف قسم فرعي جديد"
     },
     "footer": {
         "developed_by": "تصميم وتطوير"
