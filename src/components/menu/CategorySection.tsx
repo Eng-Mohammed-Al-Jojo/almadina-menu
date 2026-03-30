@@ -10,9 +10,10 @@ interface Props {
   subcategories: Subcategory[];
   items: Item[];
   orderSystem: boolean;
+  index?: number;
 }
 
-export default function CategorySection({ category, subcategories, items, orderSystem }: Props) {
+export default function CategorySection({ category, subcategories, items, orderSystem, index }: Props) {
   const { t, i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -51,17 +52,24 @@ export default function CategorySection({ category, subcategories, items, orderS
     items.find(i => i.image)?.image;
 
   return (
-    <div className="w-full mb-4">
+    <motion.div 
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: (index ?? 0) * 0.15, duration: 0.6, ease: "easeOut" }}
+      className="w-full mb-4"
+    >
 
       {/* Header */}
       <motion.button
         layout
         onClick={() => setIsOpen(!isOpen)}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
         className="w-full relative group overflow-hidden rounded-4xl
         bg-(--bg-card)/80 backdrop-blur-md
         border border-(--border-color)
         shadow-[0_8px_25px_-10px_rgba(0,0,0,0.15)]
-        hover:shadow-[0_12px_35px_-12px_rgba(0,0,0,0.2)]
+        hover:shadow-2xl hover:shadow-primary/25
         transition-all duration-500"
       >
         <div className="relative h-48 sm:h-56 w-full overflow-hidden">
@@ -91,7 +99,7 @@ export default function CategorySection({ category, subcategories, items, orderS
               <h2 className="text-xl sm:text-2xl font-black text-(--text-main)">
                 {catName}
               </h2>
-              <p className="text-[10px] sm:text-xs font-bold text-(--text-muted) uppercase tracking-widest mt-1">
+              <p className="text-[10px] sm:text-xs font-bold text-(--text-main) uppercase tracking-widest mt-1">
                 {items.length} {t('common.items')}
               </p>
             </div>
@@ -128,9 +136,9 @@ export default function CategorySection({ category, subcategories, items, orderS
                   {groupedItems.noSubItems.map((item, index) => (
                     <motion.div
                       key={item.id}
-                      initial={{ opacity: 0, x: 15 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.04 }}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: index * 0.08, ease: "easeOut" }}
                     >
                       <ItemRow item={item} orderSystem={orderSystem} />
                     </motion.div>
@@ -156,9 +164,9 @@ export default function CategorySection({ category, subcategories, items, orderS
                     {groupedItems.groups[sub.id].map((item, iIdx) => (
                       <motion.div
                         key={item.id}
-                        initial={{ opacity: 0, x: 15 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: (sIdx + 1) * 0.08 + iIdx * 0.04 }}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, delay: (sIdx + 1) * 0.1 + iIdx * 0.06, ease: "easeOut" }}
                       >
                         <ItemRow item={item} orderSystem={orderSystem} />
                       </motion.div>
@@ -171,6 +179,6 @@ export default function CategorySection({ category, subcategories, items, orderS
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 }

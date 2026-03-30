@@ -1,8 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
-import { db } from "../../firebase";
-import { ref, onValue } from "firebase/database";
 import CategorySection from "./CategorySection";
 import ItemRow from "./ItemRow";
+import MenuSkeleton from "./MenuSkeleton";
 import LoadingScreen from "../common/LoadingScreen";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
@@ -52,26 +51,6 @@ export interface Item {
   order?: number;
 }
 
-/* ================= LocalStorage ================= */
-const saveToLocal = (cats: Category[], subs: Subcategory[], its: Item[], orderSystem: boolean) => {
-  localStorage.setItem(
-    "menu_cache",
-    JSON.stringify({
-      categories: cats,
-      subcategories: subs,
-      items: its,
-      orderSystem,
-      savedAt: Date.now(),
-    })
-  );
-};
-
-const loadFromLocal = () => {
-  const cached = localStorage.getItem("menu_cache");
-  if (!cached) return null;
-  return JSON.parse(cached);
-};
-
 /* ================= Main Component ================= */
 interface Props {
   onLoadingChange?: (loading: boolean) => void;
@@ -79,121 +58,74 @@ interface Props {
   orderSystem?: boolean; // لو بدك تمرره من بره MenuPage
 }
 
+import { MenuService } from "../../services/menuService";
+
 export default function Menu({ onLoadingChange, onFeaturedCheck, orderSystem: initialOrderSystem }: Props) {
   const { t } = useTranslation();
   const [categories, setCategories] = useState<Category[]>([]);
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
   const [items, setItems] = useState<Item[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingPhase, setLoadingPhase] = useState<"splash" | "skeleton" | "ready">("splash");
   const [orderSystem, setOrderSystem] = useState<boolean>(initialOrderSystem ?? true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-  const MIN_LOADING_TIME = 3000;
   const [startTime] = useState(Date.now());
-  /* ================= Backup Logic ================= */
-  const loadMenuJson = async () => {
-    try {
-      const res = await fetch("/menu.json");
-      const data = await res.json();
-      const cats: Category[] = Object.entries(data.categories || {}).map(([id, v]: any) => ({
-        id,
-        ...v,
-        available: v.available !== false,
-      })).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-      const subs: Subcategory[] = Object.entries(data.subcategories || {}).map(([id, v]: any) => ({ id, ...v }));
-      const its: Item[] = Object.entries(data.items || {}).map(([id, v]: any) => ({ id, ...v, createdAt: v.createdAt || 0 }));
-      setCategories(cats);
-      setSubcategories(subs);
-      setItems(its);
-      setOrderSystem(data.orderSystem ?? true);
-      const elapsed = Date.now() - startTime;
-      const remaining = Math.max(0, MIN_LOADING_TIME - elapsed);
 
-      setTimeout(() => {
-        setLoading(false);
-        onLoadingChange?.(false);
-      }, remaining);
-    } catch {
-      setLoading(false);
-      onLoadingChange?.(false);
-    }
-  };
-
-  /* ================= Firebase Sync ================= */
+  /* ================= Data Fetching ================= */
   useEffect(() => {
     onLoadingChange?.(true);
-    let timeoutId: number | null = null;
-    let firebaseLoaded = false;
-    const finishFirebase = (cats: Category[], subs: Subcategory[], its: Item[], os: boolean) => {
-      firebaseLoaded = true;
-      saveToLocal(cats, subs, its, os);
+    let isMounted = true;
+
+    // Transition from splash to skeleton after 1200ms
+    const splashTimer = setTimeout(() => {
+      if (isMounted) {
+        setLoadingPhase((prev) => (prev === "splash" ? "skeleton" : prev));
+      }
+    }, 1200);
+
+    const loadData = async () => {
+      // 1. Fetch initial fast data
+      const { data } = await MenuService.getMenuWithFallback();
+      
+      if (!isMounted) return;
+
+      setCategories(data.categories);
+      setSubcategories(data.subcategories);
+      setItems(data.items);
+      setOrderSystem(data.orderSystem);
+
+      // We want to enter "ready" phase only after splash (1200ms) + skeleton (800ms) = 2000ms minimum.
       const elapsed = Date.now() - startTime;
-      const remaining = Math.max(0, MIN_LOADING_TIME - elapsed);
+      const remaining = Math.max(0, 2000 - elapsed);
 
       setTimeout(() => {
-        setLoading(false);
-        onLoadingChange?.(false);
+        if (isMounted) {
+          setLoadingPhase("ready");
+          onLoadingChange?.(false);
+        }
       }, remaining);
 
-      if (timeoutId) clearTimeout(timeoutId);
+      // 2. Subscribe to background real-time updates to keep data fresh without loading spinners
+      const unsubscribe = MenuService.subscribeToMenuUpdates((freshData) => {
+        if (isMounted) {
+          setCategories(freshData.categories);
+          setSubcategories(freshData.subcategories);
+          setItems(freshData.items);
+          setOrderSystem(freshData.orderSystem);
+        }
+      });
+
+      return unsubscribe;
     };
-    const loadOnline = () => {
-      let cats: Category[] = [];
-      let subs: Subcategory[] = [];
-      let its: Item[] = [];
-      let catsLoaded = false;
-      let subsLoaded = false;
-      let itemsLoaded = false;
-      let orderSystemLoaded = false;
-      timeoutId = window.setTimeout(() => {
-        if (firebaseLoaded) return;
-        const cached = loadFromLocal();
-        if (cached) {
-          setCategories(cached.categories || []);
-          setSubcategories(cached.subcategories || []);
-          setItems(cached.items || []);
-          setOrderSystem(cached.orderSystem ?? true);
-          setLoading(false);
-          onLoadingChange?.(false);
-        } else loadMenuJson();
-      }, 8000);
-      onValue(ref(db, "categories"), (snap) => {
-        const data = snap.val();
-        cats = data ? Object.entries(data).map(([id, v]: any) => ({
-          id,
-          ...v,
-          available: v.available !== false,
-        })) : [];
-        cats.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-        setCategories(cats);
-        catsLoaded = true;
-        if (itemsLoaded && orderSystemLoaded && subsLoaded) finishFirebase(cats, subs, its, orderSystem);
-      });
-      onValue(ref(db, "subcategories"), (snap) => {
-        const data = snap.val();
-        subs = data ? Object.entries(data).map(([id, v]: any) => ({ id, ...v })) : [];
-        setSubcategories(subs);
-        subsLoaded = true;
-        if (catsLoaded && itemsLoaded && orderSystemLoaded) finishFirebase(cats, subs, its, orderSystem);
-      });
-      onValue(ref(db, "items"), (snap) => {
-        const data = snap.val();
-        its = data ? Object.entries(data).map(([id, v]: any) => ({ id, ...v, createdAt: v.createdAt || 0 })) : [];
-        its.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-        setItems(its);
-        itemsLoaded = true;
-        if (catsLoaded && orderSystemLoaded && subsLoaded) finishFirebase(cats, subs, its, orderSystem);
-      });
-      onValue(ref(db, "settings/orderSystem"), (snap) => {
-        const val = snap.val();
-        setOrderSystem(val ?? true);
-        orderSystemLoaded = true;
-        if (catsLoaded && itemsLoaded && subsLoaded) finishFirebase(cats, subs, its, val ?? true);
-      });
+
+    const cleanupPromise = loadData();
+
+    return () => {
+      isMounted = false;
+      clearTimeout(splashTimer);
+      cleanupPromise.then(unsub => unsub && unsub());
     };
-    if (navigator.onLine) loadOnline();
-    else loadMenuJson();
-  }, [onLoadingChange, t]);
+  }, [onLoadingChange]);
 
   /* ================= Filtered Data ================= */
   const featuredItems = useMemo(() => items.filter(i => i.star === true && i.visible !== false), [items]);
@@ -214,8 +146,16 @@ export default function Menu({ onLoadingChange, onFeaturedCheck, orderSystem: in
     onFeaturedCheck?.(featuredItems.length > 0);
   }, [featuredItems, onFeaturedCheck]);
 
-  if (loading) {
+  if (loadingPhase === "splash") {
     return <LoadingScreen />;
+  }
+
+  if (loadingPhase === "skeleton") {
+    return (
+      <div className="max-w-7xl mx-auto px-1 sm:px-6 lg:px-8 pb-32">
+        <MenuSkeleton />
+      </div>
+    );
   }
 
   return (
@@ -276,10 +216,10 @@ export default function Menu({ onLoadingChange, onFeaturedCheck, orderSystem: in
         <AnimatePresence mode="wait">
           <motion.div
             key={searchTerm}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
+            initial={{ opacity: 0, scale: 0.98, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.98, y: -20 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
           >
             {/* Case 1: Search active - show flat list of items */}
             {searchTerm ? (
@@ -306,7 +246,7 @@ export default function Menu({ onLoadingChange, onFeaturedCheck, orderSystem: in
             ) : (
               /* Case 2: Normal view - Category Cards with Accordions */
               <div className="flex flex-col gap-6">
-                {availableCategories.map((cat) => {
+                {availableCategories.map((cat, index) => {
                   const catItems = items.filter((i) => i.categoryId === cat.id && i.visible !== false);
                   if (!catItems.length) return null;
                   return (
@@ -316,6 +256,7 @@ export default function Menu({ onLoadingChange, onFeaturedCheck, orderSystem: in
                       subcategories={subcategories}
                       items={catItems}
                       orderSystem={orderSystem}
+                      index={index}
                     />
                   );
                 })}

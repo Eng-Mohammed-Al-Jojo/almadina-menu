@@ -40,7 +40,7 @@ export default function MenuPage() {
             onClick={toggleTheme}
             className="w-12 h-12 flex items-center justify-center rounded-2xl bg-(--bg-card)/60 border border-(--border-color) backdrop-blur-xl hover:bg-(--bg-card) hover:border-primary/30 transition-all text-(--text-main) shadow-premium"
           >
-            {theme === "light"
+            {theme === "dark"
               ? <FaMoon size={18} />
               : <FaSun size={18} className="text-amber-400" />}
           </button>

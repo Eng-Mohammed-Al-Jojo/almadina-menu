@@ -1,5 +1,5 @@
 import { type Item } from "./Menu";
-import { useState } from "react";
+import React, { useState } from "react";
 import { useCart } from "../../context/CartContext";
 import { FiPlus, FiCheck, FiStar } from "react-icons/fi";
 import { TbCurrencyShekel } from "react-icons/tb";
@@ -12,7 +12,7 @@ interface Props {
   featuredMode?: boolean;
 }
 
-export default function ItemRow({ item, orderSystem, featuredMode }: Props) {
+const ItemRow = React.memo(({ item, orderSystem, featuredMode }: Props) => {
   const { t } = useTranslation();
   const prices = String(item.price).split(",");
   const unavailable = item.visible === false;
@@ -38,7 +38,9 @@ export default function ItemRow({ item, orderSystem, featuredMode }: Props) {
   return (
     <motion.div
       layout
-      className={`relative group flex flex-col md:flex-row gap-4 p-4 sm:p-5 bg-(--bg-card)/40 backdrop-blur-md rounded-4xl border border-(--border-color) transition-all duration-500 ${unavailable ? "opacity-60 grayscale-[0.8]" : "hover:border-primary/30 hover:shadow-xl hover:bg-(--bg-card)"
+      whileHover={{ scale: 1.015 }}
+      whileTap={{ scale: 0.98 }}
+      className={`relative group flex flex-col md:flex-row gap-4 p-4 sm:p-5 bg-(--bg-card)/40 backdrop-blur-md rounded-4xl border border-(--border-color) transition-all duration-500 ${unavailable ? "opacity-60 grayscale-[0.8]" : "hover:border-primary/30 hover:shadow-xl hover:shadow-primary/15 hover:bg-(--bg-card)"
         } ${featuredMode ? "ring-2 ring-primary/20 bg-linear-to-b from-primary/10 to-transparent shadow-lg shadow-primary/5" : ""}`}
     >
       {/* Image Section - Only in Featured Mode */}
@@ -151,4 +153,6 @@ export default function ItemRow({ item, orderSystem, featuredMode }: Props) {
       </AnimatePresence>
     </motion.div>
   );
-}
+});
+
+export default ItemRow;
