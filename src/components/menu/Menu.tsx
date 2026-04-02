@@ -1,9 +1,8 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import CategorySection from "./CategorySection";
 import ItemRow from "./ItemRow";
 import MenuSkeleton from "./MenuSkeleton";
-import LoadingScreen from "../common/LoadingScreen";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { FiSearch, FiX } from "react-icons/fi";
 import { FaCommentDots } from "react-icons/fa";
@@ -51,83 +50,108 @@ export interface Item {
   order?: number;
 }
 
-/* ================= Main Component ================= */
+/* ================= Props ================= */
 interface Props {
   onLoadingChange?: (loading: boolean) => void;
   onFeaturedCheck?: (hasFeatured: boolean) => void;
-  orderSystem?: boolean; // لو بدك تمرره من بره MenuPage
+  orderSystem?: boolean;
 }
 
 import { MenuService } from "../../services/menuService";
+
+/**
+ * Loading phases:
+ *   "loading"  → Firebase data is still being fetched (LoadingScreen is shown by parent)
+ *   "skeleton" → Data arrived, LoadingScreen is fading out, Skeleton shown for 700ms
+ *   "ready"    → Full menu rendered
+ */
+type LoadingPhase = "loading" | "skeleton" | "ready";
+
+/* ================= Configuration ================= */
+const MIN_LOADING_TIME = 3000; // وقت شاشة التحميل (مثلاً 3 ثوانٍ)
+const SKELETON_DURATION = 800; // وقت الـ Skeleton (مثلاً 0.8 ثانية)
 
 export default function Menu({ onLoadingChange, onFeaturedCheck, orderSystem: initialOrderSystem }: Props) {
   const { t } = useTranslation();
   const [categories, setCategories] = useState<Category[]>([]);
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
   const [items, setItems] = useState<Item[]>([]);
-  const [loadingPhase, setLoadingPhase] = useState<"splash" | "skeleton" | "ready">("splash");
+  const [phase, setPhase] = useState<LoadingPhase>("loading");
   const [orderSystem, setOrderSystem] = useState<boolean>(initialOrderSystem ?? true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-  const [startTime] = useState(Date.now());
+  const isMounted = useRef(true);
+  const startTime = useRef(Date.now()); // لتتبع وقت البداية
 
   /* ================= Data Fetching ================= */
   useEffect(() => {
+    isMounted.current = true;
     onLoadingChange?.(true);
-    let isMounted = true;
 
-    // Transition from splash to skeleton after 1200ms
-    const splashTimer = setTimeout(() => {
-      if (isMounted) {
-        setLoadingPhase((prev) => (prev === "splash" ? "skeleton" : prev));
-      }
-    }, 1200);
+    let unsubscribe: (() => void) | null = null;
 
     const loadData = async () => {
-      // 1. Fetch initial fast data
-      const { data } = await MenuService.getMenuWithFallback();
-      
-      if (!isMounted) return;
+      try {
+        // 1. جلب البيانات
+        const { data } = await MenuService.getMenuWithFallback();
 
-      setCategories(data.categories);
-      setSubcategories(data.subcategories);
-      setItems(data.items);
-      setOrderSystem(data.orderSystem);
+        if (!isMounted.current) return;
 
-      // We want to enter "ready" phase only after splash (1200ms) + skeleton (800ms) = 2000ms minimum.
-      const elapsed = Date.now() - startTime;
-      const remaining = Math.max(0, 2000 - elapsed);
+        setCategories(data.categories);
+        setSubcategories(data.subcategories);
+        setItems(data.items);
+        setOrderSystem(data.orderSystem);
 
-      setTimeout(() => {
-        if (isMounted) {
-          setLoadingPhase("ready");
+        // حساب الوقت المتبقي لضمان ظهور الـ Loading Screen للمدة المطلوبة
+        const elapsed = Date.now() - startTime.current;
+        const remainingFetchTime = Math.max(0, MIN_LOADING_TIME - elapsed);
+
+        setTimeout(() => {
+          if (!isMounted.current) return;
+
+          // 2. إخفاء LoadingScreen (بداية الـ Fade out)
           onLoadingChange?.(false);
-        }
-      }, remaining);
 
-      // 2. Subscribe to background real-time updates to keep data fresh without loading spinners
-      const unsubscribe = MenuService.subscribeToMenuUpdates((freshData) => {
-        if (isMounted) {
+          // 3. الدخول في مرحلة الـ Skeleton
+          setPhase("skeleton");
+
+          // 4. بعد انتهاء وقت الـ Skeleton، اعرض المنيو الحقيقي
+          setTimeout(() => {
+            if (isMounted.current) {
+              setPhase("ready");
+            }
+          }, SKELETON_DURATION);
+
+        }, remainingFetchTime);
+
+        // 5. التحديث التلقائي في الخلفية
+        unsubscribe = MenuService.subscribeToMenuUpdates((freshData) => {
+          if (!isMounted.current) return;
           setCategories(freshData.categories);
           setSubcategories(freshData.subcategories);
           setItems(freshData.items);
           setOrderSystem(freshData.orderSystem);
-        }
-      });
+        });
 
-      return unsubscribe;
+      } catch (err) {
+        console.error("Menu load failed:", err);
+        if (isMounted.current) {
+          onLoadingChange?.(false);
+          setPhase("ready");
+        }
+      }
     };
 
-    const cleanupPromise = loadData();
+    loadData();
 
     return () => {
-      isMounted = false;
-      clearTimeout(splashTimer);
-      cleanupPromise.then(unsub => unsub && unsub());
+      isMounted.current = false;
+      unsubscribe?.();
     };
-  }, [onLoadingChange]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  /* ================= Filtered Data ================= */
+  /* ================= Derived Data ================= */
   const featuredItems = useMemo(() => items.filter(i => i.star === true && i.visible !== false), [items]);
   const availableCategories = useMemo(() => categories.filter(cat => cat.available), [categories]);
 
@@ -137,7 +161,6 @@ export default function Menu({ onLoadingChange, onFeaturedCheck, orderSystem: in
       if (!item) return false;
       const name = (item.nameAr || item.name || "").toLowerCase();
       const ingredients = (item.ingredientsAr || item.ingredients || "").toLowerCase();
-
       return name.includes(search) || ingredients.includes(search);
     });
   }, [items, searchTerm]);
@@ -146,20 +169,34 @@ export default function Menu({ onLoadingChange, onFeaturedCheck, orderSystem: in
     onFeaturedCheck?.(featuredItems.length > 0);
   }, [featuredItems, onFeaturedCheck]);
 
-  if (loadingPhase === "splash") {
-    return <LoadingScreen />;
+  /* ================= Phase: Loading ================= */
+  // Still waiting for data — render nothing (LoadingScreen is in the parent/overlay)
+  if (phase === "loading") {
+    return null;
   }
 
-  if (loadingPhase === "skeleton") {
+  /* ================= Phase: Skeleton ================= */
+  if (phase === "skeleton") {
     return (
-      <div className="max-w-7xl mx-auto px-1 sm:px-6 lg:px-8 pb-32">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+        className="max-w-7xl mx-auto px-1 sm:px-6 lg:px-8 pb-32"
+      >
         <MenuSkeleton />
-      </div>
+      </motion.div>
     );
   }
 
+  /* ================= Phase: Ready ================= */
   return (
-    <div className="max-w-7xl mx-auto px-1 sm:px-6 lg:px-8 pb-32">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      className="max-w-7xl mx-auto px-1 sm:px-6 lg:px-8 pb-32"
+    >
       {/* Header / Search Section */}
       <div className="flex flex-col items-center mb-10 gap-6">
         <div className="w-full max-w-2xl relative group">
@@ -221,7 +258,7 @@ export default function Menu({ onLoadingChange, onFeaturedCheck, orderSystem: in
             exit={{ opacity: 0, scale: 0.98, y: -20 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
           >
-            {/* Case 1: Search active - show flat list of items */}
+            {/* Case 1: Search active */}
             {searchTerm ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {filteredItems.length > 0 ? (
@@ -244,7 +281,7 @@ export default function Menu({ onLoadingChange, onFeaturedCheck, orderSystem: in
                 )}
               </div>
             ) : (
-              /* Case 2: Normal view - Category Cards with Accordions */
+              /* Case 2: Normal category view */
               <div className="flex flex-col gap-6">
                 {availableCategories.map((cat, index) => {
                   const catItems = items.filter((i) => i.categoryId === cat.id && i.visible !== false);
@@ -283,6 +320,6 @@ export default function Menu({ onLoadingChange, onFeaturedCheck, orderSystem: in
         onClose={() => setShowFeedbackModal(false)}
         orderSystem={orderSystem}
       />
-    </div>
+    </motion.div>
   );
 }

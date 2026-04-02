@@ -6,6 +6,7 @@ import Footer from "../components/menu/footer";
 import Menu from "../components/menu/Menu";
 import { FaFire, FaMoon, FaSun } from "react-icons/fa";
 import FeaturedModal from "../components/menu/FeaturedModal";
+import LoadingScreen from "../components/common/LoadingScreen";
 import { motion } from "framer-motion";
 import { FirebaseService } from "../services/firebaseService";
 import OrderStatusButton from "../components/cart/OrderStatusButton";
@@ -14,10 +15,22 @@ export default function MenuPage() {
   const { t } = useTranslation();
   const { theme, toggleTheme } = useTheme();
   const [showFeaturedModal, setShowFeaturedModal] = useState(false);
-  const [loading, setLoading] = useState(true);
+
+  /**
+   * isLoading     → true while Firebase/cache fetch is in progress
+   * isDataReady   → true once Menu signals that data has arrived
+   * isSkeleton    → true during the skeleton-to-content transition (controlled inside Menu)
+   *
+   * LoadingScreen is visible as long as isLoading === true.
+   * After isLoading becomes false → LoadingScreen fade-out starts.
+   * CartButton / Featured button appear only after isDataReady === true.
+   */
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDataReady, setIsDataReady] = useState(false);
   const [hasFeatured, setHasFeatured] = useState(false);
   const [orderSystem, setOrderSystem] = useState(true);
 
+  // Listen for orderSystem toggle from Firebase settings
   useEffect(() => {
     const unsubscribe = FirebaseService.listen("settings/orderSystem", (value) => {
       setOrderSystem(value ?? true);
@@ -25,8 +38,19 @@ export default function MenuPage() {
     return () => unsubscribe();
   }, []);
 
+  // Called by Menu when Firebase fetch completes → triggers LoadingScreen fade-out
+  const handleLoadingChange = (loading: boolean) => {
+    setIsLoading(loading);
+    if (!loading) {
+      setIsDataReady(true);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-(--bg-main) text-(--text-main) font-['Cairo'] relative transition-colors duration-500">
+
+      {/* ✅ Global Loading Screen — controlled by data fetch state */}
+      <LoadingScreen visible={isLoading} />
 
       {/* Background Decor */}
       <div className="absolute top-0 left-0 w-full h-80 bg-linear-to-b from-primary/15 to-transparent pointer-events-none"></div>
@@ -34,7 +58,7 @@ export default function MenuPage() {
       {/* ✅ Top Bar */}
       <div className="absolute top-8 left-0 right-0 z-50 px-8 flex justify-between items-center pointer-events-none">
 
-        {/* 🔹 RIGHT SIDE (Action Buttons) */}
+        {/* RIGHT SIDE (Action Buttons) */}
         <div className="flex items-center gap-4 pointer-events-auto mr-auto">
           <button
             onClick={toggleTheme}
@@ -45,14 +69,18 @@ export default function MenuPage() {
               : <FaSun size={18} className="text-amber-400" />}
           </button>
 
-          {!loading && hasFeatured && (
-            <button
+          {/* Featured button — only visible after data is ready */}
+          {isDataReady && hasFeatured && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4 }}
               onClick={() => setShowFeaturedModal(true)}
               className="flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/10 text-primary border border-primary/20 backdrop-blur-xl hover:bg-primary hover:text-white transition-all shadow-premium"
               title={t("common.most_ordered")}
             >
               <FaFire className="w-5 h-5" />
-            </button>
+            </motion.button>
           )}
         </div>
 
@@ -112,18 +140,18 @@ export default function MenuPage() {
           </div>
         </div>
 
-        {/* Menu */}
+        {/* Menu Component */}
         <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8">
           <Menu
-            onLoadingChange={setLoading}
+            onLoadingChange={handleLoadingChange}
             onFeaturedCheck={setHasFeatured}
           />
         </div>
 
       </main>
 
-      {/* Floating Cart (managed internally by CartButton) */}
-      {!loading && <CartButton />}
+      {/* Floating Cart — only after data is ready */}
+      {isDataReady && <CartButton />}
 
       <FeaturedModal
         show={showFeaturedModal}
