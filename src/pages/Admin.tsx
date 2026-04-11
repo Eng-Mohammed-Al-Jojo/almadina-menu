@@ -3,7 +3,7 @@ import { db, auth } from "../firebase";
 import { ref, onValue, remove, update, get, set, push } from "firebase/database";
 import {
   FiDownload, FiSettings, FiUpload, FiLogOut, FiPackage,
-  FiLayout, FiDatabase, FiLock, FiMail, FiUser
+  FiLayout, FiDatabase, FiLock, FiMail, FiUser, FiEye, FiEyeOff
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -65,6 +65,7 @@ export default function Admin() {
   const [orderSettings, setOrderSettings] = useState<any>(null);
   const [settings, setSettings] = useState({
     orderSystem: false,
+    showPrices: true,
     orderSettings: { inRestaurant: false, takeaway: false, inPhone: "", outPhone: "" },
     complaintsWhatsapp: "",
     footerInfo: { address: "", phone: "", whatsapp: "", facebook: "", instagram: "", tiktok: "" },
@@ -110,15 +111,17 @@ export default function Admin() {
           complaintsWhatsapp: "",
           footerInfo: { address: "", facebook: "", instagram: "", phone: "", tiktok: "", whatsapp: "" },
           orderSettings: { inRestaurant: false, inPhone: "", takeaway: false, outPhone: "" },
-          orderSystem: true
+          orderSystem: true,
+          showPrices: true
         };
         await set(settingsRef, defaultSettings);
         setSettings(defaultSettings);
         setOrderSettings(defaultSettings);
       } else {
         const data = snap.val();
-        setSettings(data);
-        setOrderSettings(data);
+        const fullData = { ...data, showPrices: data.showPrices ?? true };
+        setSettings(fullData);
+        setOrderSettings(fullData);
       }
     };
     initSettings();
@@ -463,6 +466,25 @@ export default function Admin() {
           <div className="flex items-center gap-3 flex-wrap justify-center w-full md:w-auto">
             {/* Action Group */}
             <div className="flex items-center gap-2 bg-(--bg-main) p-1.5 rounded-2xl border border-(--border-color)">
+              <button
+                onClick={async () => {
+                  try {
+                    const newValue = !(settings.showPrices ?? true);
+                    await update(ref(db, "settings"), { showPrices: newValue });
+                    setSettings((prev: any) => ({ ...prev, showPrices: newValue }));
+                    showNotification(t('common.success') + " ✅");
+                  } catch {
+                    showNotification("Error", 'error');
+                  }
+                }}
+                className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all ${
+                  (settings.showPrices ?? true) ? "text-green-500 hover:bg-green-50" : "text-red-500 hover:bg-red-50"
+                }`}
+                title="Show/Hide all menu prices"
+              >
+                {(settings.showPrices ?? true) ? <FiEye size={20} /> : <FiEyeOff size={20} />}
+              </button>
+              <div className="w-px h-6 bg-(--border-color)" />
               <button onClick={() => setShowOrderSettings(true)} className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-primary/10 hover:text-primary text-(--text-muted) transition-all" title={t('admin.settings')}>
                 <FiSettings size={20} />
               </button>

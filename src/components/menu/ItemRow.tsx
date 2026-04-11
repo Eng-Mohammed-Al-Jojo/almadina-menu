@@ -5,6 +5,7 @@ import { FiPlus, FiCheck, FiStar } from "react-icons/fi";
 import { TbCurrencyShekel } from "react-icons/tb";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import { useGlobalSettings } from "../../context/GlobalSettingsContext";
 
 interface Props {
   item: Item;
@@ -14,6 +15,7 @@ interface Props {
 
 const ItemRow = React.memo(({ item, orderSystem, featuredMode }: Props) => {
   const { t } = useTranslation();
+  const { showPrices } = useGlobalSettings();
   const prices = String(item.price).split(",");
   const unavailable = item.visible === false;
 
@@ -78,7 +80,7 @@ const ItemRow = React.memo(({ item, orderSystem, featuredMode }: Props) => {
           </div>
 
           <div className="flex flex-col items-end gap-1 shrink-0">
-            {orderSystem ? (
+            {!showPrices ? null : orderSystem ? (
               <div className="flex flex-col items-end gap-1">
                 {prices.map((p, idx) => {
                   const price = Number(p.trim());

@@ -4,6 +4,7 @@ import { useCart } from "../../context/CartContext";
 import CartModal from "./CartModal";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import { useGlobalSettings } from "../../context/GlobalSettingsContext";
 
 interface CartButtonProps {
     className?: string;
@@ -12,13 +13,14 @@ interface CartButtonProps {
 export default function CartButton({ className = "" }: CartButtonProps) {
     const { t, i18n } = useTranslation();
     const { totalItems } = useCart();
+    const { showPrices } = useGlobalSettings();
     const [open, setOpen] = useState(false);
 
     return (
         <>
             {/* Cart Button */}
             <AnimatePresence>
-                {totalItems > 0 && (
+                {totalItems > 0 && showPrices && (
                     <motion.button
                         initial={{ scale: 0, opacity: 0, y: 30 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}

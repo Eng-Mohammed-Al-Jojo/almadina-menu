@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { CartProvider } from "./context/CartContext";
 import { ThemeProvider } from "./context/ThemeContext";
+import { GlobalSettingsProvider } from "./context/GlobalSettingsContext";
 import "./i18n";
 import App from "./App";
 import "./index.css";
@@ -12,7 +13,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <BrowserRouter>
       <ThemeProvider>
         <CartProvider>
-          <App />
+          <GlobalSettingsProvider>
+            <App />
+          </GlobalSettingsProvider>
         </CartProvider>
       </ThemeProvider>
     </BrowserRouter>
